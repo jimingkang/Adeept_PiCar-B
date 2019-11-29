@@ -29,7 +29,7 @@ class ObjectsOnRoadProcessor(object):
         self.height = height
 
         # initialize car
-        //self.car = car
+        #self.car = car
         self.speed_limit = speed_limit
         self.speed = speed_limit
 
