@@ -79,7 +79,7 @@ data = ''
 
 dis_data = 0
 dis_scan = 1
-
+camera = picamera.PiCamera()  
 def replace_num(initial,new_num):   #Call this function to replace data in '.txt' file
     newline=""
     str_num=str(new_num)
@@ -698,7 +698,7 @@ if __name__ == '__main__':
     tcpSerSock.bind(ADDR)
     tcpSerSock.listen(5)                      #Start server,waiting for client
 
-    camera = picamera.PiCamera()              #Camera initialization
+                #Camera initialization
     camera.resolution = (640, 480)
     camera.framerate = 7
     rawCapture = PiRGBArray(camera, size=(640, 480))
