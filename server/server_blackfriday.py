@@ -223,7 +223,7 @@ def turn_right_led():        #Turn on the LED on the right
 def setup():                 #initialization
     motor.setup()            
     turn.ahead()
-    findline.setup()
+    findline_blackfriday.setup()
 
 def destroy():               #Clean up
     GPIO.cleanup()
