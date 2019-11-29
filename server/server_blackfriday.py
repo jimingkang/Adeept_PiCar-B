@@ -56,8 +56,8 @@ status     = 1          #Motor rotation
 forward    = 0          #Motor forward
 backward   = 1          #Motor backward
 
-left_spd   = 100         #Speed of the car
-right_spd  = 100         #Speed of the car
+left_spd   = 70         #Speed of the car
+right_spd  = 70         #Speed of the car
 left       = 100         #Motor Left
 right      = 100         #Motor Right
 
@@ -238,8 +238,8 @@ def test_line(curr_steering_angle):
         #print(status_left,status_middle,status_right)
         if int(new_angle) >335-2 :
             print('turn left %s'%new_angle)
-            turn.left()
-            #turn.turn_ang(abs(int(new_angle)))
+            #turn.left()
+            turn.turn_ang(abs(int(new_angle)))
             led.both_off()
             led.side_on(left_R)
             motor.motor_left(status, backward,left_spd*spd_ad_2)
@@ -253,8 +253,8 @@ def test_line(curr_steering_angle):
             motor.motor_right(status,backward,right_spd*spd_ad_1)
         elif int(new_angle) <335+2 :
             print('turn left %s'%new_angle)
-            turn.right()
-            #turn.turn_ang(abs(int(new_angle)))
+            #turn.right()
+            turn.turn_ang(abs(int(new_angle)))
             led.both_off()
             led.side_on(right_R)
             motor.motor_left(status, backward,left_spd*spd_ad_2)
