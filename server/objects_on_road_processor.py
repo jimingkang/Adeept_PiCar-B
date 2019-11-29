@@ -29,7 +29,7 @@ class ObjectsOnRoadProcessor(object):
         self.height = height
 
         # initialize car
-        self.car = car
+        //self.car = car
         self.speed_limit = speed_limit
         self.speed = speed_limit
 
@@ -69,7 +69,7 @@ class ObjectsOnRoadProcessor(object):
         # Main entry point of the Road Object Handler
         logging.debug('Processing objects.................................')
         objects, final_frame = self.detect_objects(frame)
-        self.control_car(objects)
+        #self.control_car(objects)
         logging.debug('Processing objects END..............................')
 
         return final_frame

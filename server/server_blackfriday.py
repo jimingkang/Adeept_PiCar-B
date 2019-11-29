@@ -231,9 +231,11 @@ def destroy():               #Clean up
 
 def opencv_thread():         #OpenCV and FPV video
     global hoz_mid_orig,vtr_mid_orig
+    object_processor = ObjectsOnRoadProcessor()
     font = cv2.FONT_HERSHEY_SIMPLEX
     for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
-        image = frame.array
+        combo_image = object_processor.process_objects_on_road(frame)
+        image = combo_image.array
         cv2.line(image,(300,240),(340,240),(128,255,128),1)
         cv2.line(image,(320,220),(320,260),(128,255,128),1)
 
