@@ -17,7 +17,7 @@ import picamera
 from picamera.array import PiRGBArray
 import turn
 import led
-import findline
+import findline_blackfriday
 import speech
 import cv2
 from collections import deque
@@ -241,7 +241,7 @@ def opencv_thread():         #OpenCV and FPV video
     for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
         orig_image = frame.array
         sinal_image = object_processor.process_objects_on_road(orig_image)
-        line_image = land_follower.follow_lane(sinal_image)
+        curr_steering_angle,line_image = land_follower.follow_lane(sinal_image)
         image=line_image
         cv2.line(image,(300,240),(340,240),(128,255,128),1)
         cv2.line(image,(320,220),(320,260),(128,255,128),1)

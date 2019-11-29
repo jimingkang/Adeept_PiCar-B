@@ -20,9 +20,9 @@ class HandCodedLaneFollower(object):
         show_image("orig", frame)
 
         lane_lines, frame = detect_lane(frame)
-        final_frame = self.steer(frame, lane_lines)
+        curr_steering_angle,final_frame = self.steer(frame, lane_lines)
 
-        return final_frame
+        return curr_steering_angle,final_frame
 
     def steer(self, frame, lane_lines):
         logging.debug('steering...')
@@ -38,7 +38,7 @@ class HandCodedLaneFollower(object):
         curr_heading_image = display_heading_line(frame, self.curr_steering_angle)
         show_image("heading", curr_heading_image)
 
-        return curr_heading_image
+        return curr_steering_angle,curr_heading_image
 
 
 ############################
