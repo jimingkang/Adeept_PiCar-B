@@ -31,6 +31,7 @@ import base64
 import os
 import subprocess
 from objects_on_road_processor import ObjectsOnRoadProcessor
+from hand_coded_lane_follower import HandCodedLaneFollower
 #time.sleep(4)
 
 pwm = Adafruit_PCA9685.PCA9685()    #Ultrasonic Control
@@ -231,11 +232,15 @@ def destroy():               #Clean up
 
 def opencv_thread():         #OpenCV and FPV video
     global hoz_mid_orig,vtr_mid_orig
+    
     object_processor = ObjectsOnRoadProcessor()
+    camera = cv2.VideoCapture(-1)
+    
     font = cv2.FONT_HERSHEY_SIMPLEX
     for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
         image = frame.array
-        combo_image = object_processor.process_objects_on_road(image)
+        sinal_image = object_processor.process_objects_on_road(image)
+        line_image = land_follower.follow_lane(sinal_image)
         
         cv2.line(image,(300,240),(340,240),(128,255,128),1)
         cv2.line(image,(320,220),(320,260),(128,255,128),1)
