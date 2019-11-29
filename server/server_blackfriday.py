@@ -234,7 +234,7 @@ def opencv_thread():         #OpenCV and FPV video
     global hoz_mid_orig,vtr_mid_orig
     
     object_processor = ObjectsOnRoadProcessor()
-    camera = cv2.VideoCapture(-1)
+    #camera = cv2.VideoCapture(-1)
     
     font = cv2.FONT_HERSHEY_SIMPLEX
     for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
