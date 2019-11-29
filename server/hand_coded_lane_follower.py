@@ -38,7 +38,7 @@ class HandCodedLaneFollower(object):
         curr_heading_image = display_heading_line(frame, self.curr_steering_angle)
         show_image("heading", curr_heading_image)
 
-        return curr_steering_angle,curr_heading_image
+        return self.curr_steering_angle,curr_heading_image
 
 
 ############################
