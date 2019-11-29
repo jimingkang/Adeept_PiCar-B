@@ -5,7 +5,7 @@ import math
 import datetime
 import sys
 
-_SHOW_IMAGE = True
+_SHOW_IMAGE = False
 
 
 class HandCodedLaneFollower(object):
