@@ -70,7 +70,7 @@ def run():
         sinal_image = object_processor.process_objects_on_road(orig_image)
         curr_steering_angle,line_image = land_follower.follow_lane(sinal_image)
         new_angle=335-85*(90-curr_steering_angle)/45
-        print（'new angle %s'%new_angle)
+        print('new angle %s'%new_angle)
         status_right = GPIO.input(line_pin_right)
         status_middle = GPIO.input(line_pin_middle)
         status_left = GPIO.input(line_pin_left)
