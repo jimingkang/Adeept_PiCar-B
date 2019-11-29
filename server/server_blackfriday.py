@@ -384,7 +384,7 @@ def ws2812_thread():         #WS_2812 leds
 def findline_thread():       #Line tracking mode
     while 1:
         while findline_mode:
-            findline.run()
+            findline_blackfriday.run()
         time.sleep(0.2)
 
 def speech_thread():         #Speech recognition mode
