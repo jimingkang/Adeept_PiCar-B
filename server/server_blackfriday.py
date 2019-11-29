@@ -232,17 +232,17 @@ def destroy():               #Clean up
 def test_line(curr_steering_angle):
         new_angle=335-85*(90-curr_steering_angle)/45
         print('new angle %s'%new_angle)
-        status_right = GPIO.input(line_pin_right)
-        status_middle = GPIO.input(line_pin_middle)
-        status_left = GPIO.input(line_pin_left)
-        print(status_left,status_middle,status_right)
+        #status_right = GPIO.input(line_pin_right)
+        #status_middle = GPIO.input(line_pin_middle)
+        #status_left = GPIO.input(line_pin_left)
+        #print(status_left,status_middle,status_right)
         if new_angle <335-2 :
             turn.turn_ang(abs(new_angle))
             led.both_off()
             led.side_on(left_R)
             motor.motor_left(status, backward,left_spd*spd_ad_2)
             motor.motor_right(status,forward,right_spd*spd_ad_2)
-        elif new_angle <335+2 & new_angle >335-3 :
+        elif new_angle <335+2 & new_angle >335-2 :
             turn.middle()
             led.both_off()
             led.yellow()
