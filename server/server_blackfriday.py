@@ -242,7 +242,7 @@ def test_line(curr_steering_angle):
             led.side_on(left_R)
             motor.motor_left(status, backward,left_spd*spd_ad_2)
             motor.motor_right(status,forward,right_spd*spd_ad_2)
-        elif new_angle <335+2 && new_angle >335-3 :
+        elif new_angle <335+2 & new_angle >335-3 :
             turn.middle()
             led.both_off()
             led.yellow()
