@@ -56,8 +56,8 @@ status     = 1          #Motor rotation
 forward    = 0          #Motor forward
 backward   = 1          #Motor backward
 
-left_spd   = 50         #Speed of the car
-right_spd  = 50         #Speed of the car
+left_spd   = 100         #Speed of the car
+right_spd  = 100         #Speed of the car
 left       = 100         #Motor Left
 right      = 100         #Motor Right
 
@@ -230,13 +230,13 @@ def destroy():               #Clean up
     connection.close()
     client_socket.close()
 def test_line(curr_steering_angle):
-        new_angle=335-85*(90-curr_steering_angle)/45
+        new_angle=335-85*(curr_steering_angle-90)/45
         print('new angle %s'%new_angle)
         #status_right = GPIO.input(line_pin_right)
         #status_middle = GPIO.input(line_pin_middle)
         #status_left = GPIO.input(line_pin_left)
         #print(status_left,status_middle,status_right)
-        if int(new_angle) <335-2 :
+        if int(new_angle) >335-2 :
             print('turn left %s'%new_angle)
             turn.left()
             #turn.turn_ang(abs(int(new_angle)))
@@ -251,7 +251,7 @@ def test_line(curr_steering_angle):
             led.yellow()
             motor.motor_left(status, forward,left_spd*spd_ad_1)
             motor.motor_right(status,backward,right_spd*spd_ad_1)
-        elif int(new_angle) >335+2 :
+        elif int(new_angle) <335+2 :
             print('turn left %s'%new_angle)
             turn.right()
             #turn.turn_ang(abs(int(new_angle)))
