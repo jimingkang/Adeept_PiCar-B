@@ -9,6 +9,8 @@ import RPi.GPIO as GPIO
 import time
 import motor
 import turn,led
+import Adafruit_PCA9685
+import server2
 
 def num_import_int(initial):       #Call this function to import data from '.txt' file
     with open("set.txt") as f:
@@ -51,6 +53,8 @@ Ec_back = 7
 Ec_left = 21
 Ec_right = 26
 
+pwm = Adafruit_PCA9685.PCA9685()    #Horn Control
+
 def checkdist(sensor):       #Reading distance
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(Tr, GPIO.OUT,initial=GPIO.LOW)
@@ -68,20 +72,19 @@ def checkdist(sensor):       #Reading distance
 
 def setup():          #initialization
     motor.setup()
-    led.setup()
+    led.setup() 
 
 def destroy():        #motor stops when this program exit
     motor.destroy()
     GPIO.cleanup()
 
-def loop(distance_stay,distance_range):   #Tracking with Ultrasonic
-    motor.setup()
-    led.setup()
+def loop(distance_stay,distance_range,strip):   #Tracking with Ultrasonic
+    setup()
     turn.ahead()
     turn.middle()
-    time.sleep(1)
+    time.sleep(0.5)
     dis_front = checkdist(Ec)
-    dis_back = checkdist(Ec_back)
+    dis_back = checkdist(Ec_back) 
 #    if dis_front < distance_range:             #Check if the target is in diatance range
 #        if dis_front > (distance_stay+0.1) :   #If the target is in distance range and out of distance stay, then move forward to track
 #            turn.ahead()
@@ -108,6 +111,7 @@ def loop(distance_stay,distance_range):   #Tracking with Ultrasonic
 #        el
     if dis_back < distance_range:             #Check if the target is in diatance range
         if dis_back > (distance_stay+0.1) :   #If the target is in distance range and out of distance stay, then move backwards to track
+            pwm.set_pwm(12, 0, 4095)
             turn.ahead()
             moving_time = (dis_back-distance_stay)/0.38
             if moving_time > 0.5:
@@ -115,24 +119,28 @@ def loop(distance_stay,distance_range):   #Tracking with Ultrasonic
             print('mb')
             led.both_off()
             led.red()
+            server2.colorWipe(strip, server2.Color(255,255,0))                     #Yellow LED when in reverse            
             motor.motor_left(status, forward,left_spd*spd_ad_u)
             motor.motor_right(status,backward,right_spd*spd_ad_u)
             time.sleep(moving_time)
+            pwm.set_pwm(12, 0, 0)   
             motor.motorStop()
-            return 0
+            server2.colorWipe(strip, server2.Color(255,0,0))                       #LED red when idle                  
         elif dis_back < (distance_stay-0.1) : #Check if the target is too close, if so, the car move forward to keep distance at distance_stay
             if dis_front > distance_stay :
                 moving_time = (distance_stay-dis_back)/0.38
                 print('mf')
                 led.both_off()
                 led.cyan()
+                server2.colorWipe(strip, server2.Color(0,0,0))                     #LED off when moving forward                 
                 motor.motor_left(status,backward,left_spd*spd_ad_u)
                 motor.motor_right(status,forward,right_spd*spd_ad_u)
                 time.sleep(moving_time)
                 motor.motorStop()
+                server2.colorWipe(strip, server2.Color(255,0,0))                   #LED red when idle 
             else:
                 turn.ultra_turn(look_left_max)   #Ultrasonic point Left
-                time.sleep(1)                  #Wait for sensor to get into position
+                time.sleep(0.5)                  #Wait for sensor to get into position
                 dis_front = checkdist(Ec)
                 if dis_front > distance_stay:
                     moving_time = (dis_front-distance_stay)/0.38
@@ -140,23 +148,27 @@ def loop(distance_stay,distance_range):   #Tracking with Ultrasonic
                     led.both_off()
                     led.cyan()
                     turn.left()
+                    server2.colorWipe(strip, server2.Color(0,0,0))                 #LED off when moving forward                     
                     motor.motor_left(status,backward,left_spd*spd_ad_u)
                     motor.motor_right(status,forward,right_spd*spd_ad_u)
                     time.sleep(moving_time)
-                    motor.motorStop() 
+                    motor.motorStop()
+                    server2.colorWipe(strip, server2.Color(255,0,0))               #LED red when idle                      
                     turn.ahead()
                     turn.middle()
-                    time.sleep(1)
+                    time.sleep(0.5)
                     dis_front = checkdist(Ec)
                     if dis_front > distance_stay :
                         moving_time = (dis_front-distance_stay)/0.38
                         print('mf')
                         led.both_off()
                         led.cyan()
+                        server2.colorWipe(strip, server2.Color(0,0,0))             #LED off when moving forward                     
                         motor.motor_left(status,backward,left_spd*spd_ad_u)
                         motor.motor_right(status,forward,right_spd*spd_ad_u)
                         time.sleep(moving_time)
-                        motor.motorStop()   
+                        motor.motorStop()
+                        server2.colorWipe(strip, server2.Color(255,0,0))           #LED red when idle    
                 else:
                     turn.ultra_turn(look_right_max)   #Ultrasonic point right
                     time.sleep(1)                  #Wait for sensor to get into position
@@ -167,10 +179,12 @@ def loop(distance_stay,distance_range):   #Tracking with Ultrasonic
                         led.both_off()
                         led.cyan()
                         turn.right()
+                        server2.colorWipe(strip, server2.Color(0,0,0))             #LED off when moving forward   
                         motor.motor_left(status,backward,left_spd*spd_ad_u)
                         motor.motor_right(status,forward,right_spd*spd_ad_u)
                         time.sleep(moving_time)
                         motor.motorStop()
+                        server2.colorWipe(strip, server2.Color(255,0,0))           #LED red when idle 
                         turn.ahead()
                         turn.middle()
                         time.sleep(1)
@@ -180,20 +194,22 @@ def loop(distance_stay,distance_range):   #Tracking with Ultrasonic
                             print('mf')
                             led.both_off()
                             led.cyan()
+                            server2.colorWipe(strip, server2.Color(0,0,0))             #LED off when moving forward   
                             motor.motor_left(status,backward,left_spd*spd_ad_u)
                             motor.motor_right(status,forward,right_spd*spd_ad_u)
                             time.sleep(moving_time)
                             motor.motorStop()
+                            server2.colorWipe(strip, server2.Color(255,0,0))           #LED red when idle 
                     else:                
-                        print('unavoidable')
-            return 1            
+                        print('unavoidable')          
         else:                            #If the target is at distance, then the car stay still
             motor.motorStop()
+            server2.colorWipe(strip, server2.Color(255,0,0))           #LED red when idle 
             led.both_off()
             led.yellow()
-            return 0
     else:
         motor.motorStop()
+        server2.colorWipe(strip, server2.Color(255,0,0))           #LED red when idle 
 
 try:
     pass

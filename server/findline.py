@@ -68,8 +68,8 @@ def run():
         turn.left()
         led.both_off()
         led.side_on(left_R)
-        motor.motor_left(status, forward,left_spd*spd_ad_2)
-        motor.motor_right(status,backward,right_spd*spd_ad_2)
+        motor.motor_left(status, backward,left_spd*spd_ad_2)
+        motor.motor_right(status,forward,right_spd*spd_ad_2)
     elif status_middle == 1:
         turn.middle()
         led.both_off()
@@ -80,8 +80,8 @@ def run():
         turn.right()
         led.both_off()
         led.side_on(right_R)
-        motor.motor_left(status, forward,left_spd*spd_ad_2)
-        motor.motor_right(status,backward,right_spd*spd_ad_2)
+        motor.motor_left(status, backward,left_spd*spd_ad_2)
+        motor.motor_right(status,forward,right_spd*spd_ad_2)
     else:
         turn.middle()
         led.both_off()

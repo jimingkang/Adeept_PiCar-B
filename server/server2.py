@@ -381,7 +381,7 @@ def findline_thread():       #Line tracking mode
     while 1:
         while findline_mode:
             findline2.run()
-        time.sleep(0.03)
+        time.sleep(0.2)
 
 def speech_thread():         #Speech recognition mode
     while 1:
@@ -392,9 +392,7 @@ def speech_thread():         #Speech recognition mode
 def auto_thread():           #Ultrasonic tracking mode
     while 1:
         while auto_mode:
-            color = ultra2.loop(distance_stay,distance_range)
-            if color == 1:
-               colorWipe(strip, Color(255,0,0))
+            ultra2.loop(distance_stay,distance_range,strip)   #Determine color based on direction
         time.sleep(0.2)
 
 def dis_scan_thread():       #Get Ultrasonic scan distance
@@ -489,6 +487,7 @@ def run():                   #Main loop
 
 
     while True: 
+        pwm.set_pwm(12, 0, 4096)
         data = ''
         data = tcpCliSock.recv(BUFSIZ).decode()
         if not data:
@@ -595,9 +594,10 @@ def run():                   #Main loop
         
         elif 'backward' in data:               #When server receive "backward" from client,car moves backward
             tcpCliSock.send('2'.encode())
+            pwm.set_pwm(12, 10, 4095)
             motor.motor_left(status, backward, left_spd*spd_ad)
             motor.motor_right(status, forward, right_spd*spd_ad)
-            colorWipe(strip, Color(255,0,0))
+            colorWipe(strip, Color(128,128,0))
 
         elif 'forward' in data:                #When server receive "forward" from client,car moves forward
             tcpCliSock.send('1'.encode())
