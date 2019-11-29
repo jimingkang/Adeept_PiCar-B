@@ -64,13 +64,13 @@ def run():
         orig_image = frame.array
         sinal_image = object_processor.process_objects_on_road(orig_image)
         curr_steering_angle,line_image = land_follower.follow_lane(sinal_image)
-        new angle=335-85*(90-curr_steering_angle)/45
+        new_angle=335-85*(90-curr_steering_angle)/45
         status_right = GPIO.input(line_pin_right)
         status_middle = GPIO.input(line_pin_middle)
         status_left = GPIO.input(line_pin_left)
         print(status_left,status_middle,status_right)
         if status_left == 0:
-            turn.turn_ang(new angle)
+            turn.turn_ang(abs(new_angle))
             led.both_off()
             led.side_on(left_R)
             motor.motor_left(status, backward,left_spd*spd_ad_2)
@@ -83,7 +83,7 @@ def run():
             motor.motor_right(status,backward,right_spd*spd_ad_1)
         elif status_right == 0:
             #turn.right()
-            turn.turn_ang(new angle)
+            turn.turn_ang(abs(new_angle))
             led.both_off()
             led.side_on(right_R)
             motor.motor_left(status, backward,left_spd*spd_ad_2)
