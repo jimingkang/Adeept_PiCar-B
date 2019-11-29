@@ -60,7 +60,10 @@ def setup():
         pass
 
 def run():
-     global camera
+     camera = picamera.PiCamera() 
+     camera.resolution = (640, 480)
+     camera.framerate = 7
+     rawCapture = PiRGBArray(camera, size=(640, 480))
      for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
         orig_image = frame.array
         sinal_image = object_processor.process_objects_on_road(orig_image)
