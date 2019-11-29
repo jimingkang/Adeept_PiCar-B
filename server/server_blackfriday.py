@@ -8,7 +8,7 @@
 
 import RPi.GPIO as GPIO
 import motor
-import ultra2
+import ultra
 import socket
 import time
 import threading
@@ -17,7 +17,7 @@ import picamera
 from picamera.array import PiRGBArray
 import turn
 import led
-import findline2
+import findline
 import speech
 import cv2
 from collections import deque
@@ -36,7 +36,7 @@ import subprocess
 pwm = Adafruit_PCA9685.PCA9685()    #Ultrasonic Control
 
 dis_dir = []
-distance_stay  = 0.7
+distance_stay  = 0.4
 distance_range = 2
 led_status = 0
 
@@ -78,11 +78,6 @@ data = ''
 
 dis_data = 0
 dis_scan = 1
-
-Ec = 8
-Ec_back = 7
-Ec_left = 21
-Ec_right = 26
 
 def replace_num(initial,new_num):   #Call this function to replace data in '.txt' file
     newline=""
@@ -190,7 +185,7 @@ def scan():                  #Ultrasonic Scanning
 #    while cat_2>look_right_max:         #Scan,from left to right
 #        turn.ultra_turn(cat_2)
 #        cat_2 -= 3           #This value determine the speed of scanning,the greater the faster
-    new_scan_data=round(ultra2.checkdist(Ec),2)   #Get a distance of a certern direction
+    new_scan_data=round(ultra.checkdist(),2)   #Get a distance of a certern direction
     dis_dir.append(str(new_scan_data))              #Put that distance value into a list,and save it as String-Type for future transmission 
 #    turn.ultra_turn(hoz_mid)   #Ultrasonic point forward
     return dis_dir
@@ -207,7 +202,7 @@ def scan_rev():                  #Ultrasonic Scanning
     while cat_2<look_left_max:         #Scan,from left to right
         turn.ultra_turn(cat_2)
         cat_2 += 3           #This value determine the speed of scanning,the greater the faster
-        new_scan_data=round(ultra2.checkdist(Ec),2)   #Get a distance of a certern direction
+        new_scan_data=round(ultra.checkdist(),2)   #Get a distance of a certern direction
         dis_dir.append(str(new_scan_data))              #Put that distance value into a list,and save it as String-Type for future transmission 
     turn.ultra_turn(hoz_mid)   #Ultrasonic point forward
     return dis_dir
@@ -227,7 +222,7 @@ def turn_right_led():        #Turn on the LED on the right
 def setup():                 #initialization
     motor.setup()            
     turn.ahead()
-    findline2.setup()
+    findline.setup()
 
 def destroy():               #Clean up
     GPIO.cleanup()
@@ -380,28 +375,26 @@ def ws2812_thread():         #WS_2812 leds
 def findline_thread():       #Line tracking mode
     while 1:
         while findline_mode:
-            findline2.run()
-        time.sleep(0.03)
+            findline.run()
+        time.sleep(0.2)
 
 def speech_thread():         #Speech recognition mode
     while 1:
         while speech_mode:
             speech.run()
-        time.sleep(0.35)
+        time.sleep(0.2)
 
 def auto_thread():           #Ultrasonic tracking mode
     while 1:
         while auto_mode:
-            color = ultra2.loop(distance_stay,distance_range)
-            if color == 1:
-               colorWipe(strip, Color(255,0,0))
+            ultra.loop(distance_stay,distance_range)
         time.sleep(0.2)
 
 def dis_scan_thread():       #Get Ultrasonic scan distance
     global dis_data
     while 1:
         while  dis_scan:
-            dis_data = ultra2.checkdist(Ec)
+            dis_data = ultra.checkdist()
             time.sleep(0.2)
         time.sleep(0.2)
 
