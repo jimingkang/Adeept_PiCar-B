@@ -61,16 +61,17 @@ def setup():
         pass
 
 def run():
-     camera = picamera.PiCamera() 
-     camera.resolution = (640, 480)
-     camera.framerate = 7
-     rawCapture = PiRGBArray(camera, size=(640, 480))
-     for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
-        orig_image = frame.array
-        sinal_image = object_processor.process_objects_on_road(orig_image)
-        curr_steering_angle,line_image = land_follower.follow_lane(sinal_image)
-        new_angle=335-85*(90-curr_steering_angle)/45
-        print('new angle %s'%new_angle)
+     #camera = picamera.PiCamera() 
+     #camera.resolution = (640, 480)
+     #camera.framerate = 7
+     #rawCapture = PiRGBArray(camera, size=(640, 480))
+     #for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
+     #   orig_image = frame.array
+     #   sinal_image = object_processor.process_objects_on_road(orig_image)
+     #   curr_steering_angle,line_image = land_follower.follow_lane(sinal_image)
+     #    new_angle=335-85*(90-curr_steering_angle)/45
+     #   print('new angle %s'%new_angle)
+    if True:   
         status_right = GPIO.input(line_pin_right)
         status_middle = GPIO.input(line_pin_middle)
         status_left = GPIO.input(line_pin_left)

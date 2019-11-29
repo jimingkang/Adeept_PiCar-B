@@ -79,7 +79,7 @@ data = ''
 
 dis_data = 0
 dis_scan = 1
-camera = picamera.PiCamera()  
+
 def replace_num(initial,new_num):   #Call this function to replace data in '.txt' file
     newline=""
     str_num=str(new_num)
@@ -229,7 +229,39 @@ def destroy():               #Clean up
     GPIO.cleanup()
     connection.close()
     client_socket.close()
-
+def test_line(curr_steering_angle):
+        new_angle=335-85*(90-curr_steering_angle)/45
+        print('new angle %s'%new_angle)
+        status_right = GPIO.input(line_pin_right)
+        status_middle = GPIO.input(line_pin_middle)
+        status_left = GPIO.input(line_pin_left)
+        print(status_left,status_middle,status_right)
+        if status_left == 0:
+            turn.turn_ang(abs(new_angle))
+            led.both_off()
+            led.side_on(left_R)
+            motor.motor_left(status, backward,left_spd*spd_ad_2)
+            motor.motor_right(status,forward,right_spd*spd_ad_2)
+        elif status_middle == 1:
+            turn.middle()
+            led.both_off()
+            led.yellow()
+            motor.motor_left(status, forward,left_spd*spd_ad_1)
+            motor.motor_right(status,backward,right_spd*spd_ad_1)
+        elif status_right == 0:
+            #turn.right()
+            turn.turn_ang(abs(new_angle))
+            led.both_off()
+            led.side_on(right_R)
+            motor.motor_left(status, backward,left_spd*spd_ad_2)
+            motor.motor_right(status,forward,right_spd*spd_ad_2)
+        else:
+            turn.middle()
+            led.both_off()
+            led.cyan()
+            motor.motor_left(status, backward,left_spd)
+            motor.motor_right(status,forward,right_spd)
+        pass
 def opencv_thread():         #OpenCV and FPV video
     global hoz_mid_orig,vtr_mid_orig
     
@@ -242,10 +274,12 @@ def opencv_thread():         #OpenCV and FPV video
         orig_image = frame.array
         sinal_image = object_processor.process_objects_on_road(orig_image)
         curr_steering_angle,line_image = land_follower.follow_lane(sinal_image)
+        test_line(curr_steering_angle)
         image=line_image
+        
         cv2.line(image,(300,240),(340,240),(128,255,128),1)
         cv2.line(image,(320,220),(320,260),(128,255,128),1)
-
+            
 
         if opencv_mode == 1:
             hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
@@ -698,7 +732,7 @@ if __name__ == '__main__':
     tcpSerSock.bind(ADDR)
     tcpSerSock.listen(5)                      #Start server,waiting for client
 
-                #Camera initialization
+    camera = picamera.PiCamera()              #Camera initialization
     camera.resolution = (640, 480)
     camera.framerate = 7
     rawCapture = PiRGBArray(camera, size=(640, 480))
