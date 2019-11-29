@@ -236,19 +236,19 @@ def test_line(curr_steering_angle):
         status_middle = GPIO.input(line_pin_middle)
         status_left = GPIO.input(line_pin_left)
         print(status_left,status_middle,status_right)
-        if status_left == 0:
+        if new_angle <335-2 :
             turn.turn_ang(abs(new_angle))
             led.both_off()
             led.side_on(left_R)
             motor.motor_left(status, backward,left_spd*spd_ad_2)
             motor.motor_right(status,forward,right_spd*spd_ad_2)
-        elif status_middle == 1:
+        elif new_angle <335+2 && new_angle >335-3 :
             turn.middle()
             led.both_off()
             led.yellow()
             motor.motor_left(status, forward,left_spd*spd_ad_1)
             motor.motor_right(status,backward,right_spd*spd_ad_1)
-        elif status_right == 0:
+        elif new_angle >335+2 :
             #turn.right()
             turn.turn_ang(abs(new_angle))
             led.both_off()
