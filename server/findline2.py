@@ -21,6 +21,27 @@ def num_import_int(initial):        #Call this function to import data from '.tx
     n=int(snum)
     return n
 
+def replace_var(initial,new_num):   #Call this function to replace data in 'Variable.txt' file
+    newline=""
+    str_num=str(new_num)
+    with open("Variables.txt","r") as f:
+        for line in f.readlines():
+            if(line.find(initial) == 0):
+                line = initial+"%s" %(str_num+"\n")
+            newline += line
+    with open("Variables.txt","w") as f:
+        f.writelines(newline)
+
+def var_import_int(initial):        #Call this function to import data from 'Variable.txt' file
+    with open("Variables.txt") as f:
+        for line in f.readlines():
+            if(line.find(initial) == 0):
+                r=line
+    begin=len(list(initial))
+    snum=r[begin:]
+    n=int(snum)
+    return n
+
 status     = 1          #Motor rotation
 forward    = 0          #Motor forward
 backward   = 1          #Motor backward
@@ -61,10 +82,21 @@ def setup():
         pass
 
 def run():
+    #Read previous infrared inputs
+    status_middle_old = var_import_int('status_middle:')
+    status_left_old   = var_import_int('status_left:')
+    status_right_old  = var_import_int('status_right:')
+
     status_right = GPIO.input(line_pin_right)
     status_middle = GPIO.input(line_pin_middle)
     status_left = GPIO.input(line_pin_left)
+    #Update infrared readings
+    replace_var('status_middle:',status_middle)
+    replace_var('status_left:',status_left)
+    replace_var('status_right:',status_right)
+
     print(status_left,status_middle,status_right)
+
     #Respond to sensor readings
     if status_middle == 1: #Line is lost
         turn.middle()
@@ -72,12 +104,21 @@ def run():
         led.yellow()
         motor.motor_right(status,backward,right_spd*spd_ad_3)
         time.sleep(0.05)
-    elif status_left == 0 and status_middle == 0:
-        turn.left()
-        led.both_off()
-        led.side_on(left_R)
-        motor.motor_right(status,forward,right_spd*spd_ad_2)
-        time.sleep(0.5)
+        if status_left_old == 0 and status_middle_old == 0:
+            turn.left()
+            led.both_off()
+            led.side_on(left_R)
+            motor.motor_right(status,forward,right_spd*spd_ad_2)
+            time.sleep(0.5)
+            turn.right()
+            led.both_off()
+            led.side_on(right_R)
+            motor.motor_right(status,backward,right_spd*spd_ad_2)  
+            time.sleep(0.5)
+            turn.left()
+            led.both_off()
+            led.side_on(left_R)
+            motor.motor_right(status,forward,right_spd*spd_ad_2)          
     elif status_left== 0:
         turn.left()
         led.both_off()

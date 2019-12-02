@@ -1,6 +1,6 @@
-status_middle:0
+status_middle:1
 status_left:0
-status_right:0
+status_right:1
 status_m_2:0
 status_l_2:0
 status_r_2:0
