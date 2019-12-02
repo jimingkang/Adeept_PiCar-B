@@ -259,7 +259,7 @@ def opencv_thread():         #OpenCV and FPV video
         curr_steering_angle,line_image = land_follower.follow_lane(sinal_image)
         #self.video_objs.write(image_objs)
         video_lane.write(line_image)
-         image=line_image
+        image=line_image
          
          
         cv2.line(image,(300,240),(340,240),(128,255,128),1)
@@ -404,7 +404,7 @@ def findline_thread():       #Line tracking mode
     while 1:
         while findline_mode:
             findline2.run()
-        time.sleep(0.15)
+        time.sleep(0.2)
 
 def speech_thread():         #Speech recognition mode
     while 1:

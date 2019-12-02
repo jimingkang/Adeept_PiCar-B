@@ -54,8 +54,8 @@ spd_ad     = 1          #Speed Adjustment
 pwm0       = 0          #Camera direction 
 pwm1       = 1          #Ultrasonic direction
 status     = 1          #Motor rotation
-forward    = 0          #Motor forward
-backward   = 1          #Motor backward
+forward    = 1          #Motor forward
+backward   = 0          #Motor backward
 
 left_spd   = 70         #Speed of the car
 right_spd  = 70         #Speed of the car

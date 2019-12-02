@@ -136,7 +136,7 @@ def test_video(video_file):
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
 
-    test_video('/home/pi/SmartPiCar/driver/data/tmp/car_video_lane191202_090930')
+    test_video('./data/tmp/car_video_lane191202_105302')
     #test_video('/home/pi/DeepPiCar/models/lane_navigation/data/images/video01')
     test_photo('/home/pi/DeepPiCar/models/lane_navigation/data/images/video01_100_084.png')
     # test_photo(sys.argv[1])
