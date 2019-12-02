@@ -98,7 +98,7 @@ def run():
     print(status_left,status_middle,status_right)
 
     #Respond to sensor readings
-    if status_middle == 1: #Line is lost
+    if status_middle == 1 and status_right == 1 and status_left == 1: #Line is lost
         turn.middle()
         led.both_off()
         led.yellow()
