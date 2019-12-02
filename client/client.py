@@ -92,8 +92,12 @@ def call_stop_2(event):            #When this function is called,client commands
     c_l_stu=0
     tcpClicSock.send(('middle').encode())
 
+def call_selfdriving(event):            #When this function is called,client commands the car to MachineLearning
+    tcpClicSock.send(('selfdriving').encode())    
+
 def click_call_Left(event):            #When this function is called,client commands the car to turn left
     tcpClicSock.send(('Left').encode())
+
 
 def click_call_Right(event):           #When this function is called,client commands the car to turn right
     tcpClicSock.send(('Right').encode())
@@ -432,7 +436,7 @@ def loop():                       #GUI
             while True:
                 code_car = tcpClicSock.recv(BUFSIZ) #Listening,and save the data in 'code_car'
                 l_ip.config(text=code_car)          #Put the data on the label
-                #print(code_car)
+                print(code_car)
                 if not code_car:
                     continue
                 elif 'SET' in str(code_car):
@@ -633,6 +637,8 @@ def loop():                       #GUI
         Btn2 = tk.Button(root, width=8, text='Left',fg=color_text,bg=color_btn,relief='ridge')
         Btn3 = tk.Button(root, width=8, text='Right',fg=color_text,bg=color_btn,relief='ridge')
         Btn4 = tk.Button(root, width=8, text='Stop',fg=color_text,bg=color_btn,relief='ridge')
+        Btn_SelfDriving = tk.Button(root, width=8, text='SelfDriving',fg=color_text,bg=color_btn,relief='ridge')
+        
         Btn5 = tk.Button(root, width=8, text='Follow',fg=color_text,bg=color_btn,relief='ridge')
         
         Btn6 = tk.Button(root, width=8, text='Left',fg=color_text,bg=color_btn,relief='ridge')
@@ -650,6 +656,7 @@ def loop():                       #GUI
         Btn2.place(x=30,y=230)
         Btn3.place(x=170,y=230)
         Btn4.place(x=170,y=275)
+        
         Btn5.place(x=30,y=275)
         
         Btn6.place(x=565,y=230)
@@ -661,7 +668,7 @@ def loop():                       #GUI
 
         Btn12.place(x=535,y=107)
         Btn13.place(x=350,y=330)
-
+        Btn_SelfDriving.place(x=100,y=600)
 
         # Bind the buttons with the corresponding callback function
         Btn0.bind('<ButtonPress-1>', call_forward)
@@ -684,7 +691,7 @@ def loop():                       #GUI
         Btn2.bind('<ButtonRelease-1>', call_stop)
         Btn3.bind('<ButtonRelease-1>', call_stop)
         Btn4.bind('<ButtonRelease-1>', call_stop)
-
+        Btn_SelfDriving.bind('<ButtonRelease-1>', call_selfdriving)
         BtnC1.bind('<ButtonPress-1>', EC1_set)
         BtnC2.bind('<ButtonPress-1>', EC2_set)
         BtnM1.bind('<ButtonPress-1>', EM1_set)
