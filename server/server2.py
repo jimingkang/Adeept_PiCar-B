@@ -764,4 +764,7 @@ if __name__ == '__main__':
         colorWipe(strip, Color(0,0,0))
         camera=picamera.PiCamera()
         camera.close()
+        video_orig.release()
+        video_lane.release()
+        video_objs.release()
         destroy()
