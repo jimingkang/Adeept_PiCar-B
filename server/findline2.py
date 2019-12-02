@@ -45,8 +45,9 @@ right_B = 25
 on  = GPIO.LOW
 off = GPIO.HIGH
 
-spd_ad_1 = 0.7
-spd_ad_2 = 0.7
+spd_ad_1 = 0.6
+spd_ad_2 = 0.8
+spd_ad_3 = 1
 
 def setup():
     GPIO.setwarnings(False)
@@ -65,16 +66,23 @@ def run():
     status_left = GPIO.input(line_pin_left)
     print(status_left,status_middle,status_right)
     #Respond to sensor readings
-    if status_middle == 1 and status_left == 1 and status_right ==1: #Line is lost
+    if status_middle == 1: #Line is lost
         turn.middle()
         led.both_off()
         led.yellow()
-        motor.motor_right(status,backward,right_spd*spd_ad_1)
+        motor.motor_right(status,backward,right_spd*spd_ad_3)
+        time.sleep(0.05)
+    elif status_left == 0 and status_middle == 0:
+        turn.left()
+        led.both_off()
+        led.side_on(left_R)
+        motor.motor_right(status,forward,right_spd*spd_ad_2)
+        time.sleep(0.5)
     elif status_left== 0:
         turn.left()
         led.both_off()
         led.side_on(left_R)
-        motor.motor_right(status,forward,right_spd*spd_ad_1)
+        motor.motor_right(status,forward,right_spd*spd_ad_2)
     elif status_right == 0:
         turn.right()
         led.both_off()
@@ -84,7 +92,7 @@ def run():
         turn.middle()
         led.both_off()
         led.cyan()
-        motor.motor_right(status,forward,right_spd*spd_ad_2)
+        motor.motor_right(status,forward,right_spd*spd_ad_1)
     pass
 
 try:
