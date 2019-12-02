@@ -381,7 +381,7 @@ def findline_thread():       #Line tracking mode
     while 1:
         while findline_mode:
             findline2.run()
-        time.sleep(0.2)
+        time.sleep(0.15)
 
 def speech_thread():         #Speech recognition mode
     while 1:

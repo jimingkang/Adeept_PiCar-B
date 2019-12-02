@@ -10,31 +10,9 @@ import time
 import motor
 import turn
 import led
-import ultra2
 
 def num_import_int(initial):        #Call this function to import data from '.txt' file
     with open("set.txt") as f:
-        for line in f.readlines():
-            if(line.find(initial) == 0):
-                r=line
-    begin=len(list(initial))
-    snum=r[begin:]
-    n=int(snum)
-    return n
-
-def replace_var(initial,new_num):   #Call this function to replace data in '.txt' file
-    newline=""
-    str_num=str(new_num)
-    with open("Variables.txt","r") as f:
-        for line in f.readlines():
-            if(line.find(initial) == 0):
-                line = initial+"%s" %(str_num+"\n")
-            newline += line
-    with open("Variables.txt","w") as f:
-        f.writelines(newline)
-
-def var_import_int(initial):        #Call this function to import data from '.txt' file
-    with open("Variables.txt") as f:
         for line in f.readlines():
             if(line.find(initial) == 0):
                 r=line
@@ -67,13 +45,8 @@ right_B = 25
 on  = GPIO.LOW
 off = GPIO.HIGH
 
-spd_ad_1 = 1
-spd_ad_2 = 0.75
-
-distance_front = 0.05
-distance_back  = 0.4
-Ec = 8
-Ec_back = 7
+spd_ad_1 = 0.7
+spd_ad_2 = 0.7
 
 def setup():
     GPIO.setwarnings(False)
@@ -87,56 +60,33 @@ def setup():
         pass
 
 def run():
-
-    status_middle_old = var_import_int('status_middle:')
-    status_left_old   = var_import_int('status_left:')
-    status_right_old  = var_import_int('status_right:')
-      
     status_right = GPIO.input(line_pin_right)
     status_middle = GPIO.input(line_pin_middle)
     status_left = GPIO.input(line_pin_left)
-
-    replace_var('status_middle:',status_middle)
-    replace_var('status_left:',status_left)
-    replace_var('status_right:',status_right)
-
-    dis_front = ultra2.checkdist(Ec)
-    dis_back = ultra2.checkdist(Ec_back)
-#    if dis_front < distance_front:
-#        print('Object in range')
-#    else:
     print(status_left,status_middle,status_right)
-    if status_middle == 1 and status_left == 1 and status_right ==1:
+    #Respond to sensor readings
+    if status_middle == 1 and status_left == 1 and status_right ==1: #Line is lost
         turn.middle()
         led.both_off()
         led.yellow()
-        motor.motor_left(status, forward,left_spd*spd_ad_2)
-        motor.motor_right(status,backward,right_spd*spd_ad_2)
-    elif status_left == 0:
+        motor.motor_right(status,backward,right_spd*spd_ad_1)
+    elif status_left== 0:
         turn.left()
         led.both_off()
         led.side_on(left_R)
-        motor.motor_left(status, backward,left_spd*spd_ad_2)
-        motor.motor_right(status,forward,right_spd*spd_ad_2)
+        motor.motor_right(status,forward,right_spd*spd_ad_1)
     elif status_right == 0:
         turn.right()
         led.both_off()
         led.side_on(right_R)
-        motor.motor_left(status, backward,left_spd*spd_ad_2)
         motor.motor_right(status,forward,right_spd*spd_ad_2)
-#    elif status_middle == 1:
-#        turn.middle()
-#        led.both_off()
-#        led.yellow()
-#        motor.motor_left(status, forward,left_spd*spd_ad_1)
-#        motor.motor_right(status,backward,right_spd*spd_ad_1)     
     else:
         turn.middle()
         led.both_off()
         led.cyan()
-        motor.motor_left(status, backward,left_spd*spd_ad_2)
         motor.motor_right(status,forward,right_spd*spd_ad_2)
     pass
+
 try:
     pass
 except KeyboardInterrupt:
