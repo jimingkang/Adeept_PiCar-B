@@ -279,7 +279,7 @@ def opencv_thread():         #OpenCV and FPV video
         orig_image = frame.array
         sinal_image = object_processor.process_objects_on_road(orig_image)
         curr_steering_angle,line_image = land_follower.follow_lane(sinal_image)
-        test_line(curr_steering_angle)
+        #test_line(curr_steering_angle)
         image=line_image
         
         cv2.line(image,(300,240),(340,240),(128,255,128),1)
@@ -314,7 +314,7 @@ def opencv_thread():         #OpenCV and FPV video
                         else:
                             hoz_mid_orig = look_left_max
                         ultra_turn(hoz_mid_orig)
-                        #print('x=%d'%X)
+                        print('x=%d'%X)
                     elif X >330:
                         mu1 = int((X-330)/3)
                         hoz_mid_orig-=mu1
