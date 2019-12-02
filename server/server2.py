@@ -93,9 +93,9 @@ __SCREEN_WIDTH = 320
 __SCREEN_HEIGHT = 240
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
 datestr = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
-video_orig =  cv2.VideoWriter('./data/tmp/car_video%s.avi' % datestr, fourcc, 20.0, (__SCREEN_WIDTH,__SCREEN_HEIGHT))
-video_lane = cv2.VideoWriter('./data/tmp/car_video_lane%s.avi' % datestr, fourcc, 20.0, (__SCREEN_WIDTH,__SCREEN_HEIGHT))
-video_objs = cv2.VideoWriter('./data/tmp/car_video_objs%s.avi' % datestr, fourcc, 20.0, (__SCREEN_WIDTH,__SCREEN_HEIGHT))
+#video_orig =  cv2.VideoWriter('./data/tmp/car_video%s.avi' % datestr, fourcc, 20.0, (__SCREEN_WIDTH,__SCREEN_HEIGHT))
+video_lane = cv2.VideoWriter('/home/pi/data/tmp/car_video_lane%s.avi' % datestr, fourcc, 20.0, (__SCREEN_WIDTH,__SCREEN_HEIGHT))
+#video_objs = cv2.VideoWriter('./data/tmp/car_video_objs%s.avi' % datestr, fourcc, 20.0, (__SCREEN_WIDTH,__SCREEN_HEIGHT))
 
 def replace_num(initial,new_num):   #Call this function to replace data in '.txt' file
     newline=""
@@ -764,7 +764,7 @@ if __name__ == '__main__':
         colorWipe(strip, Color(0,0,0))
         camera=picamera.PiCamera()
         camera.close()
-        video_orig.release()
+        #video_orig.release()
         video_lane.release()
-        video_objs.release()
+        #video_objs.release()
         destroy()
