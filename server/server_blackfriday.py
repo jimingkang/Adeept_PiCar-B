@@ -80,6 +80,18 @@ data = ''
 dis_data = 0
 dis_scan = 1
 
+#video jimmy
+__SCREEN_WIDTH = 320
+__SCREEN_HEIGHT = 240
+fourcc = cv2.VideoWriter_fourcc(*'XVID')
+datestr = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
+video_orig =  cv2.VideoWriter('../data/tmp/car_video%s.avi' % datestr, fourcc, 20.0, (__SCREEN_WIDTH,__SCREEN_HEIGHT))
+video_lane = cv2.VideoWriter('../data/tmp/car_video_lane%s.avi' % datestr, fourcc, 20.0, (__SCREEN_WIDTH,__SCREEN_HEIGHT))
+video_objs = cv2.VideoWriter('../data/tmp/car_video_objs%s.avi' % datestr, fourcc, 20.0, (__SCREEN_WIDTH,__SCREEN_HEIGHT))
+
+def create_video_recorder(self, path):
+    return cv2.VideoWriter(path, fourcc, 20.0, (__SCREEN_WIDTH,__SCREEN_HEIGHT))
+
 def replace_num(initial,new_num):   #Call this function to replace data in '.txt' file
     newline=""
     str_num=str(new_num)
@@ -279,8 +291,11 @@ def opencv_thread():         #OpenCV and FPV video
         orig_image = frame.array
         sinal_image = object_processor.process_objects_on_road(orig_image)
         curr_steering_angle,line_image = land_follower.follow_lane(sinal_image)
+        #self.video_objs.write(image_objs)
+        video_lane.write(line_image)
         #test_line(curr_steering_angle)
         image=line_image
+        
         
         cv2.line(image,(300,240),(340,240),(128,255,128),1)
         cv2.line(image,(320,220),(320,260),(128,255,128),1)
@@ -393,7 +408,6 @@ def opencv_thread():         #OpenCV and FPV video
             dis = dis_data
             if dis < 8:
                 cv2.putText(image,'%s m'%str(round(dis,2)),(40,40), font, 0.5,(255,255,255),1,cv2.LINE_AA)
-
 
         encoded, buffer = cv2.imencode('.jpg', image)
         jpg_as_text = base64.b64encode(buffer)
@@ -782,4 +796,7 @@ if __name__ == '__main__':
         colorWipe(strip, Color(0,0,0))
         camera=picamera.PiCamera()
         camera.close()
+        video_orig.release()
+        video_lane.release()
+        video_objs.release()
         destroy()
