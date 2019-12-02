@@ -1,3 +1,4 @@
+
 #!/usr/bin/python3
 # File name   : server.py
 # Description : The main program server takes control of Ultrasonic,Motor,Servo by receiving the order from the client through TCP and carrying out the corresponding operation.
@@ -255,15 +256,15 @@ def test_line(curr_steering_angle):
             turn.turn_ang(abs(int(new_angle)))
             led.both_off()
             led.side_on(left_R)
-            motor.motor_left(status, backward,left_spd*spd_ad_2)
+            #motor.motor_left(status, backward,left_spd*spd_ad_2)
             motor.motor_right(status,forward,right_spd*spd_ad_2)
         elif int(new_angle) <335+5 & int(new_angle) >335-5 :
             print('turn middle %s'%new_angle)
             turn.middle()
             led.both_off()
             led.yellow()
-            motor.motor_left(status, forward,left_spd*spd_ad_1)
-            motor.motor_right(status,backward,right_spd*spd_ad_1)
+            #motor.motor_left(status, forward,left_spd*spd_ad_1)
+            motor.motor_right(status,forward,right_spd*spd_ad_1)
         elif int(new_angle) <335+5 :
             print('turn right %s'%new_angle)
             print('turn right %s'%new_angle)
@@ -271,7 +272,7 @@ def test_line(curr_steering_angle):
             turn.turn_ang(abs(int(new_angle)))
             led.both_off()
             led.side_on(right_R)
-            motor.motor_left(status, backward,left_spd*spd_ad_2)
+            #motor.motor_left(status, backward,left_spd*spd_ad_2)
             motor.motor_right(status,forward,right_spd*spd_ad_2)
         else:
             turn.middle()
