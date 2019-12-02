@@ -30,6 +30,9 @@ import zmq
 import base64
 import os
 import subprocess
+import datetime
+from objects_on_road_processor import ObjectsOnRoadProcessor
+from hand_coded_lane_follower import HandCodedLaneFollower
 
 #time.sleep(4)
 
@@ -83,6 +86,16 @@ Ec = 8
 Ec_back = 7
 Ec_left = 21
 Ec_right = 26
+
+
+#video jimmy
+__SCREEN_WIDTH = 320
+__SCREEN_HEIGHT = 240
+fourcc = cv2.VideoWriter_fourcc(*'XVID')
+datestr = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
+video_orig =  cv2.VideoWriter('./data/tmp/car_video%s.avi' % datestr, fourcc, 20.0, (__SCREEN_WIDTH,__SCREEN_HEIGHT))
+video_lane = cv2.VideoWriter('./data/tmp/car_video_lane%s.avi' % datestr, fourcc, 20.0, (__SCREEN_WIDTH,__SCREEN_HEIGHT))
+video_objs = cv2.VideoWriter('./data/tmp/car_video_objs%s.avi' % datestr, fourcc, 20.0, (__SCREEN_WIDTH,__SCREEN_HEIGHT))
 
 def replace_num(initial,new_num):   #Call this function to replace data in '.txt' file
     newline=""
@@ -237,8 +250,18 @@ def destroy():               #Clean up
 def opencv_thread():         #OpenCV and FPV video
     global hoz_mid_orig,vtr_mid_orig
     font = cv2.FONT_HERSHEY_SIMPLEX
+    object_processor = ObjectsOnRoadProcessor()
+    land_follower = HandCodedLaneFollower()
     for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
         image = frame.array
+        orig_image = frame.array
+        sinal_image = object_processor.process_objects_on_road(orig_image)
+        curr_steering_angle,line_image = land_follower.follow_lane(sinal_image)
+        #self.video_objs.write(image_objs)
+        video_lane.write(line_image)
+         image=line_image
+         
+         
         cv2.line(image,(300,240),(340,240),(128,255,128),1)
         cv2.line(image,(320,220),(320,260),(128,255,128),1)
 
