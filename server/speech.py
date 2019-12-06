@@ -41,13 +41,13 @@ right_spd  = num_import_int('E_M2:')         #Speed of the car
 left       = num_import_int('E_T1:')         #Motor Left
 right      = num_import_int('E_T2:')         #Motor Right
 
-left_R = 22
-left_G = 23
-left_B = 24
+left_R = 15
+left_G = 16
+left_B = 18
 
-right_R = 10
-right_G = 9
-right_B = 25
+right_R = 19
+right_G = 21
+right_B = 22
 
 on  = GPIO.LOW
 off = GPIO.HIGH
@@ -59,10 +59,7 @@ v_command=''
 
 def setup():
     GPIO.setwarnings(False)
-    try:
-        motor.setup()
-    except:
-        pass
+    motor.setup()
 
 
 def run():
@@ -82,7 +79,7 @@ def run():
     try:
         v_command = r.recognize_sphinx(audio,
         keyword_entries=[('forward',1.0),('backward',1.0),
-        ('left',1.0),('right',1.0),('stop',1.0)])        #You can add your own command here
+        ('left',1.0),('right',1.0),('stop',1.0),('find',1.0)])        #You can add your own command here
         print(v_command)
         led.both_off()
         led.cyan()
@@ -122,9 +119,12 @@ def run():
         motor.motor_right(status,backward,right_spd*spd_ad_2)
         time.sleep(2)
         motor.motorStop()
+    elif 'find' in v_command:
+        return 1
 
     elif 'stop' in v_command:
         motor.motorStop()
+        return 2
 
     else:
         pass

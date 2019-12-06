@@ -66,9 +66,13 @@ def ultra_turn(hoz_mid):
 def camera_turn(vtr_mid):
     pwm.set_pwm(2, 0, vtr_mid)
 
+def center():
+	pwm.set_pwm(1, 0, 360)
+	pwm.set_pwm(2, 0, 300)
+
 def ahead():
 	pwm.set_pwm(1, 0, hoz_mid_orig)
-	#pwm.set_pwm(2, 0, vtr_mid_orig)
+	pwm.set_pwm(2, 0, vtr_mid_orig)
 if __name__ == '__main__':
     vtr_mid_orig    = num_import_int('E_C1:')
     hoz_mid_orig    = num_import_int('E_C2:')

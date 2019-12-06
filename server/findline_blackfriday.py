@@ -23,8 +23,8 @@ def num_import_int(initial):        #Call this function to import data from '.tx
     return n
 
 status     = 1          #Motor rotation
-forward    = 0          #Motor forward
-backward   = 1          #Motor backward
+forward    = 1          #Motor forward
+backward   = 0          #Motor backward
 
 left_spd   = num_import_int('E_M1:')         #Speed of the car
 right_spd  = num_import_int('E_M2:')         #Speed of the car
@@ -77,7 +77,8 @@ def run():
         status_left = GPIO.input(line_pin_left)
         print(status_left,status_middle,status_right)
         if status_left == 0:
-            turn.turn_ang(abs(new_angle))
+            turn.left()
+            #turn.turn_ang(abs(new_angle))
             led.both_off()
             led.side_on(left_R)
             motor.motor_left(status, backward,left_spd*spd_ad_2)
@@ -89,8 +90,8 @@ def run():
             motor.motor_left(status, forward,left_spd*spd_ad_1)
             motor.motor_right(status,backward,right_spd*spd_ad_1)
         elif status_right == 0:
-            #turn.right()
-            turn.turn_ang(abs(new_angle))
+            turn.right()
+            #turn.turn_ang(abs(new_angle))
             led.both_off()
             led.side_on(right_R)
             motor.motor_left(status, backward,left_spd*spd_ad_2)

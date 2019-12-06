@@ -8,8 +8,8 @@
 # Date        : 2018/10/12
 
 import RPi.GPIO as GPIO
-import motor
-import ultra
+import motor_dp as motor
+#import ultra
 import socket
 import time
 import threading
@@ -32,8 +32,12 @@ import base64
 import os
 import subprocess
 import datetime
+import picar
 from objects_on_road_processor import ObjectsOnRoadProcessor
 from hand_coded_lane_follower import HandCodedLaneFollower
+import ultra_dp
+from deep_pi_car import DeepPiCar
+import driver_main
 #time.sleep(4)
 
 pwm = Adafruit_PCA9685.PCA9685()    #Ultrasonic Control
@@ -43,6 +47,10 @@ distance_stay  = 0.4
 distance_range = 2
 led_status = 0
 
+
+line_pin_right = 19
+line_pin_middle = 16
+line_pin_left = 20
 left_R = 22
 left_G = 23
 left_B = 24
@@ -76,15 +84,24 @@ opencv_mode   = 0
 findline_mode = 0
 speech_mode   = 0
 auto_mode     = 0
+selfdriving_mode = 0
 
+__SCREEN_WIDTH = 640
+__SCREEN_HEIGHT = 480
+camera=cv2.VideoCapture(-1)
+camera.set(3, __SCREEN_WIDTH )
+camera.set(4, __SCREEN_HEIGHT)
+deeppicar=DeepPiCar(camera)
 data = ''
 
 dis_data = 0
 dis_scan = 1
 
-#video jimmy
-__SCREEN_WIDTH = 320
-__SCREEN_HEIGHT = 240
+back_wheels=''
+#video jimmy 640, 480 
+
+#__SCREEN_WIDTH = 320
+#__SCREEN_HEIGHT = 240
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
 datestr = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
 #video_orig =  cv2.VideoWriter('./data/tmp/car_video%s.avi' % datestr, fourcc, 20.0, (__SCREEN_WIDTH,__SCREEN_HEIGHT))
@@ -233,72 +250,197 @@ def turn_left_led():         #Turn on the LED on the left
 
 def turn_right_led():        #Turn on the LED on the right
     led.turn_right(4)
-
+def setlinesensor():
+    GPIO.setwarnings(False)
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(line_pin_right,GPIO.IN)
+    GPIO.setup(line_pin_middle,GPIO.IN)
+    GPIO.setup(line_pin_left,GPIO.IN)
+    try:
+        motor.setup()
+    except:
+        pass
 def setup():                 #initialization
-    motor.setup()            
+    global back_wheels
+    #motor.setup()            
     turn.ahead()
-    findline_blackfriday.setup()
+    #setlinesensor()
+    #picar.setup()
+    #back_wheels = picar.back_wheels.Back_Wheels()
+    #back_wheels.speed = 30  # Speed Range is 0 (stop) - 100 (fastest)
+    #back_wheels.forward()
+    #back_wheels.backward()
+    #findline_blackfriday.setup()
+def replace_var(initial,new_num):   #Call this function to replace data in 'Variable.txt' file
+    newline=""
+    str_num=str(new_num)
+    with open("Variables.txt","r") as f:
+        for line in f.readlines():
+            if(line.find(initial) == 0):
+                line = initial+"%s" %(str_num+"\n")
+            newline += line
+    with open("Variables.txt","w") as f:
+        f.writelines(newline)
 
+def var_import_int(initial):        #Call this function to import data from 'Variable.txt' file
+    with open("Variables.txt") as f:
+        for line in f.readlines():
+            if(line.find(initial) == 0):
+                r=line
+    begin=len(list(initial))
+    snum=r[begin:]
+    n=int(snum)
+    return n
+    
+def steer(curr_steering_angle):
+    print('curr_steering_angle:%s'%curr_steering_angle)
+    status_middle_old = var_import_int('status_middle:')
+    status_left_old   = var_import_int('status_left:')
+    status_right_old  = var_import_int('status_right:')
+    status_middle_2 = var_import_int('status_m_2:')
+    status_left_2   = var_import_int('status_l_2:')
+    status_right_2  = var_import_int('status_r_2:')
+
+    status_right = GPIO.input(line_pin_right)
+    status_middle = GPIO.input(line_pin_middle)
+    status_left = GPIO.input(line_pin_left)
+    #Update infrared readings
+    replace_var('status_m_2:',status_middle_old)
+    replace_var('status_l_2:',status_left_old)
+    replace_var('status_r_2:',status_right_old)    
+    replace_var('status_middle:',status_middle)
+    replace_var('status_left:',status_left)
+    replace_var('status_right:',status_right)
+
+    print(status_left,status_middle,status_right,'  ',status_left_old,status_middle_old,status_right_old,'  ',status_left_2,status_middle_2,status_right_2)
+
+    #Respond to sensor readings
+    if status_middle == 1 and status_right == 1 and status_left == 1: #Line is lost
+        turn.middle()
+        led.both_off()
+        led.yellow()
+        motor.motor_right(status,backward,right_spd*spd_ad_3)
+        time.sleep(0.1)
+    elif status_left == 0 and status_middle == 0 and status_middle_old == 0 and status_left_old ==0 and status_middle_2 == 0 and status_left_2 == 0:
+        #turn.turn_ang(400)
+        if curr_steering_angle>335:
+            turn.left()
+            led.both_off()
+            led.side_on(left_R)
+            motor.motor_right(status,forward,right_spd*spd_ad_2)
+        elif curr_steering_angle<335:
+            turn.right()
+            led.both_off()
+            led.side_on(left_R)
+            motor.motor_right(status,forward,right_spd*spd_ad_2)
+        
+        #time.sleep(0.4)
+        #turn.turn_ang(250)
+        #turn.right()
+        #led.both_off()
+        #led.side_on(right_R)
+        #motor.motor_right(status,backward,right_spd*spd_ad_2)  
+        #time.sleep(0.4)
+        #turn.turn_ang(curr_steering_angle)
+        #turn.left()
+        #led.both_off()
+        #led.side_on(left_R)
+        #motor.motor_right(status,forward,right_spd*spd_ad_2)          
+    elif status_left== 0:
+        turn.left()
+        led.both_off()
+        led.side_on(left_R)
+        motor.motor_right(status,forward,right_spd*spd_ad_2)
+    elif status_right == 0:
+        turn.right()
+        led.both_off()
+        led.side_on(right_R)
+        motor.motor_right(status,forward,right_spd*spd_ad_2)
+    else:
+        turn.middle()
+        led.both_off()
+        led.cyan()
+        motor.motor_right(status,forward,right_spd*spd_ad_1)
+    pass
+
+try:
+    pass
+except KeyboardInterrupt:
+    motor.motorStop()  
+    
 def destroy():               #Clean up
     GPIO.cleanup()
     connection.close()
     client_socket.close()
 def test_line(curr_steering_angle):
-        new_angle=335-85*(curr_steering_angle-90)/45
-        print('new angle %s'%new_angle)
-        #status_right = GPIO.input(line_pin_right)
-        #status_middle = GPIO.input(line_pin_middle)
-        #status_left = GPIO.input(line_pin_left)
-        #print(status_left,status_middle,status_right)
-        if int(new_angle) >335-5 :
-            print('turn left %s'%new_angle)
-            #turn.left()
-            turn.turn_ang(abs(int(new_angle)))
-            led.both_off()
-            led.side_on(left_R)
-            #motor.motor_left(status, backward,left_spd*spd_ad_2)
-            motor.motor_right(status,forward,right_spd*spd_ad_2)
-        elif int(new_angle) <335+5 & int(new_angle) >335-5 :
-            print('turn middle %s'%new_angle)
-            turn.middle()
-            led.both_off()
-            led.yellow()
-            #motor.motor_left(status, forward,left_spd*spd_ad_1)
-            motor.motor_right(status,forward,right_spd*spd_ad_1)
-        elif int(new_angle) <335+5 :
-            print('turn right %s'%new_angle)
-            print('turn right %s'%new_angle)
-            #turn.right()
-            turn.turn_ang(abs(int(new_angle)))
-            led.both_off()
-            led.side_on(right_R)
-            #motor.motor_left(status, backward,left_spd*spd_ad_2)
-            motor.motor_right(status,forward,right_spd*spd_ad_2)
-        else:
-            turn.middle()
-            led.both_off()
-            led.cyan()
-            motor.motor_left(status, backward,left_spd)
-            motor.motor_right(status,forward,right_spd)
-        pass
+    status_right = GPIO.input(line_pin_right)
+    status_middle = GPIO.input(line_pin_middle)
+    status_left = GPIO.input(line_pin_left)
+    new_angle=370-110*(curr_steering_angle-90)/45
+    print('new angle %s'%new_angle)
+    #print(' ? int(new_angle) >370-3')
+    print('%s'%(int(new_angle) >335-3))
+    if status_middle == 1 and status_right == 1 and status_left == 1: #Line is lost
+        turn.middle()
+        led.both_off()
+        led.yellow()
+        motor.motor_right(status,backward,right_spd*spd_ad_3)
+        time.sleep(0.1)
+    elif int(new_angle) >370-3  :
+        print('turn left %s'%new_angle)
+        turn.left()
+        #turn.turn_ang(abs(int(new_angle)))
+        #motor.motor_left(status, backward,left_spd*spd_ad_2)
+        motor.motor_right(status,forward,right_spd*spd_ad_2)
+     
+    elif int(new_angle) <370+3 & int(new_angle) >370-3  &(status_middle == 0 and status_right == 0 and status_left == 0):
+        print('turn middle %s'%new_angle)
+        turn.middle()
+        #motor.motor_left(status, forward,left_spd*spd_ad_1)
+        motor.motor_right(status,forward,right_spd*spd_ad_1)
+        time.sleep(1)
+    elif int(new_angle) <370+3 :
+        print('turn right %s'%new_angle)
+        turn.right()
+        #turn.turn_ang(abs(int(new_angle)))
+        #motor.motor_left(status, backward,left_spd*spd_ad_2)
+        motor.motor_right(status,forward,right_spd*spd_ad_2)     
+    else:
+        print(' stay middle  %s'%new_angle)
+        turn.middle()
+        led.both_off()
+        led.cyan()
+        #motor.motor_left(status, backward,left_spd)
+        motor.motor_right(status,forward,right_spd)
+    pass    
+    
+    #print(status_left,status_middle,status_right)
+        
 def opencv_thread():         #OpenCV and FPV video
     global hoz_mid_orig,vtr_mid_orig
-    
-    object_processor = ObjectsOnRoadProcessor()
-    land_follower = HandCodedLaneFollower()
+    global camera
+    #object_processor = ObjectsOnRoadProcessor()
+    #land_follower = HandCodedLaneFollower()
     #camera = cv2.VideoCapture(-1)
     
     font = cv2.FONT_HERSHEY_SIMPLEX
-    for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
-        orig_image = frame.array
-        sinal_image = object_processor.process_objects_on_road(orig_image)
-        curr_steering_angle,line_image = land_follower.follow_lane(sinal_image)
-        #self.video_objs.write(image_objs)
-        video_lane.write(line_image)
-        #test_line(curr_steering_angle)
-        image=line_image
-        
-        
+    #for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
+        #orig_image = frame.array
+    while camera.isOpened():
+    #    time.sleep(1)
+        _, orig_image = camera.read()
+        if selfdriving_mode==1:
+            
+            sinal_image = deeppicar.process_objects_on_road(orig_image)
+            line_image = deeppicar.follow_lane(sinal_image)
+            image=line_image
+            #line_image = land_follower.follow_lane(sinal_image)
+            #video_objs.write(image_objs)
+            video_lane.write(line_image)
+            #test_line(curr_steering_angle)
+            #steer(curr_steering_angle)
+        else:
+            image=orig_image
         cv2.line(image,(300,240),(340,240),(128,255,128),1)
         cv2.line(image,(320,220),(320,260),(128,255,128),1)
             
@@ -414,7 +556,7 @@ def opencv_thread():         #OpenCV and FPV video
         encoded, buffer = cv2.imencode('.jpg', image)
         jpg_as_text = base64.b64encode(buffer)
         footage_socket.send(jpg_as_text)
-        rawCapture.truncate(0)
+        #rawCapture.truncate(0)
 
 def ws2812_thread():         #WS_2812 leds
     while 1:
@@ -436,6 +578,12 @@ def ws2812_thread():         #WS_2812 leds
             pass
         time.sleep(0.1)
 
+#def selfdriving():       #Line tracking mode
+#    while 1:
+#        while selfdriving_mode:
+#            driver_main.run()
+#        time.sleep(0.2)
+
 def findline_thread():       #Line tracking mode
     while 1:
         while findline_mode:
@@ -451,14 +599,14 @@ def speech_thread():         #Speech recognition mode
 def auto_thread():           #Ultrasonic tracking mode
     while 1:
         while auto_mode:
-            ultra.loop(distance_stay,distance_range)
+            ultra_dp.loop(distance_stay,distance_range)
         time.sleep(0.2)
 
 def dis_scan_thread():       #Get Ultrasonic scan distance
     global dis_data
     while 1:
         while  dis_scan:
-            dis_data = ultra.checkdist()
+            dis_data = ultra_dp.checkdist()
             time.sleep(0.2)
         time.sleep(0.2)
 
@@ -469,7 +617,8 @@ wifi_status = 0
 
 def run():                   #Main loop
     global hoz_mid,vtr_mid,ip_con,led_status,auto_status,opencv_mode,findline_mode,speech_mode,auto_mode,data,addr,footage_socket,ap_status,turn_status,wifi_status
-    led.setup()
+    global back_wheels ,selfdriving_mode
+    #led.setup()
     while True:              #Connection
         try:
             s =socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
@@ -490,22 +639,22 @@ def run():                   #Main loop
             
         if wifi_status == 1:
             print('waiting for connection...')
-            led.red()
+            #led.red()
             tcpCliSock, addr = tcpSerSock.accept()#Determine whether to connect
-            led.both_off()
-            led.green()
+            #led.both_off()
+            #led.green()
             print('...connected from :', addr)
             #time.sleep(1)
             tcpCliSock.send(('SET %s'%vtr_mid+' %s'%hoz_mid+' %s'%left_spd+' %s'%right_spd+' %s'%look_up_max+' %s'%look_down_max).encode())
             print('SET %s'%vtr_mid+' %s'%hoz_mid+' %s'%left_spd+' %s'%right_spd+' %s'%left+' %s'%right)
             break
         else:
-            led.both_off()
-            led.blue()
+            #led.both_off()
+            #led.blue()
             print('waiting for connection...')
             tcpCliSock, addr = tcpSerSock.accept()#Determine whether to connect
-            led.both_off()
-            led.green()
+            #led.both_off()
+            #led.green()
             print('...connected from :', addr)
             #time.sleep(1)
             tcpCliSock.send(('SET %s'%vtr_mid+' %s'%hoz_mid+' %s'%left_spd+' %s'%right_spd+' %s'%look_up_max+' %s'%look_down_max).encode())
@@ -607,7 +756,7 @@ def run():                   #Main loop
             motor.motorStop()
             setup()
             if led_status == 0:
-                led.setup()
+                #led.setup()
                 led.both_off()
             colorWipe(strip, Color(0,0,0))
             continue
@@ -652,15 +801,27 @@ def run():                   #Main loop
         
         elif 'backward' in data:               #When server receive "backward" from client,car moves backward
             tcpCliSock.send('2'.encode())
-            motor.motor_left(status, backward, left_spd*spd_ad)
-            motor.motor_right(status, forward, right_spd*spd_ad)
+           
+            #back_wheels.backward()
+            #motor.motor_left(status, backward, left_spd*spd_ad)
+            motor.motor_right(status, backward, right_spd*spd_ad)
             colorWipe(strip, Color(255,0,0))
 
         elif 'forward' in data:                #When server receive "forward" from client,car moves forward
             tcpCliSock.send('1'.encode())
-            motor.motor_left(status, forward,left_spd*spd_ad)
-            motor.motor_right(status,backward,right_spd*spd_ad)
+           
+            #back_wheels.forward()
+            #motor.motor_left(status, forward,left_spd*spd_ad)
+            motor.motor_right(status,forward,right_spd*spd_ad)
             colorWipe(strip, Color(0,0,255))
+        elif 'selfdriving' in data:                #When server receive "forward" from client,car moves forward
+            #tcpCliSock.send('selfdriving'.encode())
+           
+            #back_wheels.forward()
+            #motor.motor_left(status, forward,left_spd*spd_ad)
+            #motor.motor_right(status,forward,right_spd*spd_ad)
+            #colorWipe(strip, Color(0,0,255))
+            selfdriving_mode=1      
 
         elif 'l_up' in data:                   #Camera look up
             if vtr_mid< look_up_max:
@@ -742,7 +903,7 @@ def run():                   #Main loop
             continue
 
 if __name__ == '__main__':
-
+    #global camera
     HOST = ''
     PORT = 10223                              #Define port serial 
     BUFSIZ = 1024                             #Define buffer size
@@ -753,10 +914,15 @@ if __name__ == '__main__':
     tcpSerSock.bind(ADDR)
     tcpSerSock.listen(5)                      #Start server,waiting for client
 
-    camera = picamera.PiCamera()              #Camera initialization
-    camera.resolution = (640, 480)
-    camera.framerate = 7
-    rawCapture = PiRGBArray(camera, size=(640, 480))
+    #camera = picamera.PiCamera()              #Camera initialization
+    #camera.resolution = (320, 240)
+    #camera.framerate = 7
+    #rawCapture = PiRGBArray(camera, size=(320, 240))
+    
+    
+
+
+    
 
     colorLower = (24, 100, 100)               #The color that openCV find
     colorUpper = (44, 255, 255)               #USE HSV value NOT RGB
@@ -791,13 +957,15 @@ if __name__ == '__main__':
     try:
         run()
     except KeyboardInterrupt:
+        
         if ap_status == 1:
             os.system("sudo shutdown -h now\n")
             time.sleep(5)
             print('shutdown')
         colorWipe(strip, Color(0,0,0))
-        camera=picamera.PiCamera()
-        camera.close()
+        #camera=picamera.PiCamera()
+        #camera.close()
+        camera.release()
         #video_orig.release()
         video_lane.release()
         #video_objs.release()

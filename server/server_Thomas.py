@@ -30,6 +30,7 @@ import zmq
 import base64
 import os
 import subprocess
+import math
 
 #time.sleep(4)
 
@@ -52,8 +53,8 @@ spd_ad     = 1          #Speed Adjustment
 pwm0       = 0          #Camera direction 
 pwm1       = 1          #Ultrasonic direction
 status     = 1          #Motor rotation
-forward    = 0          #Motor forward
-backward   = 1          #Motor backward
+forward    = 1          #Motor forward
+backward   = 0          #Motor backward
 
 left_spd   = 100         #Speed of the car
 right_spd  = 100         #Speed of the car
@@ -101,6 +102,27 @@ def num_import_int(initial):        #Call this function to import data from '.tx
     begin=len(list(initial))
     snum=r[begin:]
     n=int(snum)
+    return n
+
+def replace_dist(initial,new_num):   #Call this function to replace data in 'distance.txt' file
+    newline=""
+    str_num=str(new_num)
+    with open("distances.txt","r") as f:
+        for line in f.readlines():
+            if(line.find(initial) == 0):
+                line = initial+"%s" %(str_num+"\n")
+            newline += line
+    with open("distances.txt","w") as f:
+        f.writelines(newline)
+
+def dist_import_float(initial):        #Call this function to import data from 'distance.txt' file
+    with open("distances.txt") as f:
+        for line in f.readlines():
+            if(line.find(initial) == 0):
+                r=line
+    begin=len(list(initial))
+    snum=r[begin:]
+    n=float(snum)
     return n
 
 vtr_mid    = num_import_int('E_C1:')
@@ -378,13 +400,33 @@ def ws2812_thread():         #WS_2812 leds
 def findline_thread():       #Line tracking mode
     while 1:
         while findline_mode:
-            findline2.run()
-        time.sleep(0.2)  
+            turn.camera_turn(284)
+            #Obtain new measurements
+            dist_front = round(ultra2.checkdist(Ec),2)
+#            dist_back  = round(ultra2.checkdist(Ec_back),2)
+            #Read previous ultrasound inputs
+            dist_front_old  = dist_import_float('dis_front:')
+#            dist_back_old  = dist_import_float('dis_back:')
+            #Updtate saved distances
+            replace_dist('dis_front:',dist_front)
+#            replace_dist('dis_back:',dist_back)
+            obstical = findline2.run(dist_front,dist_front_old)
+            time.sleep(0.00001)
+            if obstical == 1:
+                motor.motorStop()
+                pwm.set_pwm(12, 0, 0)  #Turn horn off
+                ultra2.loop(distance_stay,distance_range,strip)   #Determine color based on direction
 
 def speech_thread():         #Speech recognition mode
     while 1:
         while speech_mode:
-            speech.run()
+            mode = speech.run()
+            if mode == 1:
+                findline_mode = 1
+                auto_status = 1
+            else:
+                findline_mode = 0
+                auto_status = 0
         time.sleep(0.35)
 
 def auto_thread():           #Ultrasonic tracking mode
@@ -459,29 +501,33 @@ def run():                   #Main loop
     footage_socket.connect('tcp://%s:5555'%addr[0])
     print(addr[0])
     #Threads start
-    video_threading=threading.Thread(target=opencv_thread)      #Define a thread for FPV and OpenCV
-    video_threading.setDaemon(True)                             #'True' means it is a front thread,it would close when the mainloop() closes
-    video_threading.start()                                     #Thread starts
+    video_threading=threading.Thread(target=opencv_thread)          #Define a thread for FPV and OpenCV
+    video_threading.setDaemon(True)                                 #'True' means it is a front thread,it would close when the mainloop() closes
+    video_threading.start()                                         #Thread starts
+    
+    ws2812_threading=threading.Thread(target=ws2812_thread)         #Define a thread for ws_2812 leds
+    ws2812_threading.setDaemon(True)                                #'True' means it is a front thread,it would close when the mainloop() closes
+    ws2812_threading.start()                                        #Thread starts
+    
+    findline_threading=threading.Thread(target=findline_thread)     #Define a thread for line tracking
+    findline_threading.setDaemon(True)                              #'True' means it is a front thread,it would close when the mainloop() closes
+    findline_threading.start()                                      #Thread starts
 
-    ws2812_threading=threading.Thread(target=ws2812_thread)     #Define a thread for ws_2812 leds
-    ws2812_threading.setDaemon(True)                            #'True' means it is a front thread,it would close when the mainloop() closes
-    ws2812_threading.start()                                    #Thread starts
+#    check_dist_threading=threading.Thread(target=check_dist_thread) #Define a thread for checking for obsticals
+#    check_dist_threading.setDaemon(True)                            #'True' means it is a front thread,it would close when the mainloop() closes
+#    check_dist_threading.start()                                    #Thread starts
 
-    findline_threading=threading.Thread(target=findline_thread) #Define a thread for line tracking
-    findline_threading.setDaemon(True)                          #'True' means it is a front thread,it would close when the mainloop() closes
-    findline_threading.start()                                  #Thread starts
-
-    speech_threading=threading.Thread(target=speech_thread)     #Define a thread for speech recognition
-    speech_threading.setDaemon(True)                            #'True' means it is a front thread,it would close when the mainloop() closes
-    speech_threading.start()                                    #Thread starts
-
-    auto_threading=threading.Thread(target=auto_thread)         #Define a thread for ultrasonic tracking
-    auto_threading.setDaemon(True)                              #'True' means it is a front thread,it would close when the mainloop() closes
-    auto_threading.start()                                      #Thread starts
-
-    scan_threading=threading.Thread(target=dis_scan_thread)     #Define a thread for ultrasonic scan
-    scan_threading.setDaemon(True)                              #'True' means it is a front thread,it would close when the mainloop() closes
-    scan_threading.start()                                      #Thread starts
+    speech_threading=threading.Thread(target=speech_thread)         #Define a thread for speech recognition
+    speech_threading.setDaemon(True)                                #'True' means it is a front thread,it would close when the mainloop() closes
+    speech_threading.start()                                        #Thread starts
+    
+    auto_threading=threading.Thread(target=auto_thread)             #Define a thread for ultrasonic tracking
+    auto_threading.setDaemon(True)                                  #'True' means it is a front thread,it would close when the mainloop() closes
+    auto_threading.start()                                          #Thread starts
+    
+    scan_threading=threading.Thread(target=dis_scan_thread)         #Define a thread for ultrasonic scan
+    scan_threading.setDaemon(True)                                  #'True' means it is a front thread,it would close when the mainloop() closes
+    scan_threading.start()                                          #Thread starts
 
 
     while True: 

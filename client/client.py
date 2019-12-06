@@ -668,7 +668,7 @@ def loop():                       #GUI
 
         Btn12.place(x=535,y=107)
         Btn13.place(x=350,y=330)
-        Btn_SelfDriving.place(x=100,y=600)
+        Btn_SelfDriving.place(x=100,y=550)
 
         # Bind the buttons with the corresponding callback function
         Btn0.bind('<ButtonPress-1>', call_forward)

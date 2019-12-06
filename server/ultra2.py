@@ -143,7 +143,7 @@ def loop(distance_stay,distance_range,strip):   #Tracking with Ultrasonic
                 time.sleep(0.5)                  #Wait for sensor to get into position
                 dis_front = checkdist(Ec)
                 if dis_front > distance_stay:
-                    moving_time = (dis_front-distance_stay)/0.38
+                    moving_time = 1
                     print('Turning left')
                     led.both_off()
                     led.cyan()
@@ -159,7 +159,7 @@ def loop(distance_stay,distance_range,strip):   #Tracking with Ultrasonic
                     time.sleep(0.5)
                     dis_front = checkdist(Ec)
                     if dis_front > distance_stay :
-                        moving_time = (dis_front-distance_stay)/0.38
+                        moving_time = 1
                         print('mf')
                         led.both_off()
                         led.cyan()
@@ -174,7 +174,7 @@ def loop(distance_stay,distance_range,strip):   #Tracking with Ultrasonic
                     time.sleep(1)                  #Wait for sensor to get into position
                     dis_front = checkdist(Ec)
                     if dis_front > distance_stay:
-                        moving_time = (dis_front-distance_stay)/0.38
+                        moving_time = 1
                         print('Turning right')
                         led.both_off()
                         led.cyan()
@@ -190,7 +190,7 @@ def loop(distance_stay,distance_range,strip):   #Tracking with Ultrasonic
                         time.sleep(1)
                         dis_front = checkdist(Ec)
                         if dis_front > distance_stay :
-                            moving_time = (dis_front-distance_stay)/0.38
+                            moving_time = 1
                             print('mf')
                             led.both_off()
                             led.cyan()

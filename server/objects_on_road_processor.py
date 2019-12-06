@@ -5,7 +5,11 @@ import time
 import edgetpu.detection.engine
 from PIL import Image
 from traffic_objects import *
-
+import RPi.GPIO as GPIO
+import ultra_dp
+import motor_dp as motor
+import random
+import turn
 _SHOW_IMAGE = False
 
 
@@ -29,10 +33,26 @@ class ObjectsOnRoadProcessor(object):
         self.height = height
 
         # initialize car
-        #self.car = car
+        self.car = car
         self.speed_limit = speed_limit
         self.speed = speed_limit
+        #jimmt add for motor
+        self.spd_ad     = 1          #Speed Adjustment
+        self.pwm0       = 0          #Camera direction 
+        self.pwm1       = 1          #Ultrasonic direction
+        self.status     = 1          #Motor rotation
+        self.forward    = 0          #Motor forward
+        self.backward   = 1          #Motor backward
 
+        self.left_spd   = 70         #Speed of the car
+        self.right_spd  = 70         #Speed of the car
+        self.left       = 70         #Motor Left
+        self.right      = 70         #Motor Right
+
+        self.dis_dir = []
+        self.distance_stay  = 0.4
+        self.distance_range = 2
+        motor.setup()
         # initialize TensorFlow models
         with open(label, 'r') as f:
             pairs = (l.strip().split(maxsplit=1) for l in f.readlines())
@@ -67,35 +87,121 @@ class ObjectsOnRoadProcessor(object):
 
     def process_objects_on_road(self, frame):
         # Main entry point of the Road Object Handler
+        
         logging.debug('Processing objects.................................')
         objects, final_frame = self.detect_objects(frame)
-        #self.control_car(objects)
+        self.control_car(objects)
         logging.debug('Processing objects END..............................')
 
         return final_frame
-
+    def obstacle(self):
+        dis = ultra_dp.checkdist()
+        if dis < self.distance_range:             #Check if the target is in diatance range
+            #if dis > (self.distance_stay+0.1) :   #If the target is in distance range and out of distance stay, then move forward to track
+                #turn.ahead()
+            #    moving_time = (dis-self.distance_stay)/0.38
+            #    if moving_time > 1:
+            #        moving_time = 1
+            #    print('move forward')
+                #led.both_off()
+                #led.cyan()
+                #motor.motor_left(self.status, self.backward,left_spd)
+            #    motor.motor_right(self.status,self.forward,self.right_spd)
+            #    time.sleep(moving_time)
+            #    motor.motorStop()
+            #el
+            if dis < (self.distance_stay-0.1) : #Check if the target is too close, if so, the car move back to keep distance at distance_stay
+                moving_time = (self.distance_stay-dis)/0.38
+                print('mb')
+                #led.both_off()
+                #led.pink()
+                #motor.motor_left(status, forward,left_spd*spd_ad_u)
+                if(random.randint(0, 10)%2==1):
+                    turn.left()
+                else:
+                    turn.right()
+                motor.motor_right(self.status,self.backward,self.right_spd)
+                time.sleep(moving_time)
+                turn.middle()
+                #motor.motor_right(self.status,self.forward,self.right_spd)
+                #motor.motorStop()
+            else:                            #If the target is at distance, then the car stay still
+                motor.motorStop()
+            #led.both_off()
+            #led.yellow()
+        else:
+            motor.motorStop()    
+    def block(self):
+        turn.ahead()
+        turn.middle()
+        dis = ultra_dp.checkdist()
+        if dis < self.distance_range:             #Check if the target is in diatance range
+            if dis > (self.distance_stay+0.1) :   #If the target is in distance range and out of distance stay, then move forward to track
+                turn.ahead()
+                moving_time = (dis-self.distance_stay)/0.38
+                if moving_time > 1:
+                    moving_time = 1
+                print('move forward')
+                #led.both_off()
+                #led.cyan()
+                #motor.motor_left(self.status, self.backward,left_spd)
+                motor.motor_right(self.status,self.forward,self.right_spd)
+                time.sleep(moving_time)
+                motor.motorStop()
+            elif dis < (self.distance_stay-0.1) : #Check if the target is too close, if so, the car move back to keep distance at distance_stay
+                moving_time = (self.distance_stay-dis)/0.38
+                print('mb')
+                #led.both_off()
+                #led.pink()
+                #motor.motor_left(status, forward,left_spd*spd_ad_u)
+                motor.motor_right(self.status,self.backward,self.right_spd)
+                time.sleep(moving_time)
+                motor.motorStop()
+            else:                            #If the target is at distance, then the car stay still
+                motor.motorStop()
+            #led.both_off()
+            #led.yellow()
+        else:
+            motor.motorStop()
     def control_car(self, objects):
         logging.debug('Control car...')
+        #motor.motor_right(self.status,self.forward,20)
         car_state = {"speed": self.speed_limit, "speed_limit": self.speed_limit}
 
         if len(objects) == 0:
             logging.debug('No objects detected, drive at speed limit of %s.' % self.speed_limit)
 
         contain_stop_sign = False
+        motor.motor_right(self.status,self.forward,50)
+        
+        self.obstacle()
+        
         for obj in objects:
             obj_label = self.labels[obj.label_id]
             processor = self.traffic_objects[obj.label_id]
+            
             if processor.is_close_by(obj, self.height):
-                processor.set_car_state(car_state)
+                logging.debug('too close, %s'%obj_label)
+                self.block()
+                #processor.set_car_state(car_state)
+                #motor.motor_right(self.status,self.backward,30)
+                
             else:
                 logging.debug("[%s] object detected, but it is too far, ignoring. " % obj_label)
             if obj_label == 'Stop':
-                contain_stop_sign = True
+                #self.car.front_wheels.turn(self.curr_steering_angle)
+                motor.motorStop()
+                
+            elif obj_label == 'Limit': 
+                motor.motor_right(self.status,self.forward,20)
+            elif obj_label == 'Person':
+                self.block()
+                #ultra_dp.loop(self.distance_stay,self.distance_range)
 
         if not contain_stop_sign:
             self.traffic_objects[5].clear()
 
-        self.resume_driving(car_state)
+        #self.resume_driving(car_state)
 
     def resume_driving(self, car_state):
         old_speed = self.speed
